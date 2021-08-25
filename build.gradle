@@ -91,17 +91,6 @@ publishing {
                 root.children().last() + pomConfig
             }
 
-            // create the sign pom artifact
-            pom.withXml {
-                def pomFile = file("${project.buildDir}/generated-pom.xml")
-                writeTo(pomFile)
-                def pomAscFile = signing.sign(pomFile).signatureFiles[0]
-                artifact(pomAscFile) {
-                    classifier = null
-                    extension = 'pom.asc'
-                }
-            }
-    
             artifact sourcesJar {
                 classifier "sources"
             }
@@ -113,6 +102,7 @@ publishing {
 }
 
 signing {
+    def signingKeyId = findProperty("signingKeyId")
     def signingKey = findProperty("signingKey")
     def signingPassword = findProperty("signingPassword")
     useInMemoryPgpKeys(signingKey, signingPassword)
