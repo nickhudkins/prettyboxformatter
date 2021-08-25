@@ -13,7 +13,6 @@ plugins {
 }
 
 group 'com.nickhudkins'
-version '1.4.0'
 
 sourceCompatibility = 1.8
 
@@ -58,8 +57,6 @@ def pomConfig = {
     }
 }
 
-ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
-
 artifacts {
     archives sourcesJar
     archives javadocJar
@@ -69,8 +66,8 @@ publishing {
     repositories {
         maven {
             def releaseRepo = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-            def snapshotRepo = "https://oss.sonatype.org/content/repositories/snapshots/"
-            url = isReleaseVersion ? releaseRepo : snapshotRepo
+            // def snapshotRepo = "https://oss.sonatype.org/content/repositories/snapshots/"
+            url = releaseRepo
             credentials {
                 username = System.getenv("ORG_GRADLE_PROJECT_sonatypeUsername")
                 password = System.getenv("ORG_GRADLE_PROJECT_sonatypePassword")
