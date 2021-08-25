@@ -81,7 +81,7 @@ publishing {
         mavenPublication(MavenPublication) {
             groupId 'com.nickhudkins'
             artifactId 'prettyboxformatter'
-            version '1.4.0'
+            version findProperty('version')
             from components.java
 
             pom.withXml {

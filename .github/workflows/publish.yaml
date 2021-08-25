@@ -18,7 +18,9 @@ jobs:
           java-version: '11'
           distribution: 'adopt'
       - name: Publish package
-        run: gradle publishToSonatype closeAndReleaseSonatypeStagingRepository
+        run: |
+          VERSION=$(echo "${{ github.event.release.tag_name }}" | cut -c2-)
+          gradle -Pversion=$VERSION publishToSonatype closeAndReleaseSonatypeStagingRepository
         env:
           ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.SONATYPE_USERNAME }}
           ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
