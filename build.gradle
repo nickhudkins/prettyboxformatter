@@ -2,17 +2,16 @@ buildscript {
     repositories {
         mavenLocal()
         mavenCentral()
-        jcenter()
     }
 }
 
 plugins {
-    id "com.jfrog.bintray" version "1.7.3"
     id "maven-publish"
     id "java"
+    id "signing"
 }
 
-group 'com.bgpixel'
+group 'com.nickhudkins'
 version '1.4.0'
 
 sourceCompatibility = 1.8
@@ -23,7 +22,6 @@ compileTestJava.options.encoding = "UTF-8"
 repositories {
     mavenLocal()
     mavenCentral()
-    jcenter()
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
@@ -37,10 +35,6 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
     from javadoc.destinationDir
 }
 
-artifacts {
-    archives sourcesJar
-    archives javadocJar
-}
 
 def pomConfig = {
     licenses {
@@ -59,57 +53,70 @@ def pomConfig = {
     }
 
     scm {
-        url "https://github.com/knezmilos13/prettyboxformatter"
+        url "https://github.com/nickhudkins/prettyboxformatter"
     }
 }
 
+ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
 publishing {
+    repositories {
+        maven {
+            def releaseRepo = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            def snapshotRepo = "https://oss.sonatype.org/content/repositories/snapshots/"
+            url = isReleaseVersion ? releaseRepo : snapshotRepo
+            credentials {
+                username = System.getenv("MAVEN_USERNAME")
+                password = System.getenv("MAVEN_PASSWORD")
+            }
+        }
+    }
     publications {
         mavenPublication(MavenPublication) {
+            groupId 'com.nickhudkins'
+            artifactId 'prettyboxformatter'
+            version '1.4.0'
             from components.java
+
+            pom.withXml {
+                def root = asNode()
+                root.appendNode('description', 'A library for formatting/serializing text into boxes drawn using UTF-8 characters.')
+                root.appendNode('name', 'Pretty Box Formatter')
+                root.appendNode('url', 'https://github.com/nickhudkins/prettyboxformatter')
+                root.children().last() + pomConfig
+            }
+
+            // create the sign pom artifact
+            pom.withXml {
+                def pomFile = file("${project.buildDir}/generated-pom.xml")
+                writeTo(pomFile)
+                def pomAscFile = signing.sign(pomFile).signatureFiles[0]
+                artifact(pomAscFile) {
+                    classifier = null
+                    extension = 'pom.asc'
+                }
+            }
+    
             artifact sourcesJar {
                 classifier "sources"
             }
             artifact javadocJar {
                 classifier "javadoc"
             }
-            groupId 'com.bgpixel'
-            artifactId 'prettyboxformatter'
-            version '1.4.0'
-            pom.withXml {
-                def root = asNode()
-                root.appendNode('description', 'A library for formatting/serializing text into boxes drawn using UTF-8 characters.')
-                root.appendNode('name', 'Pretty Box Formatter')
-                root.appendNode('url', 'https://github.com/knezmilos13/prettyboxformatter')
-                root.children().last() + pomConfig
-            }
         }
     }
 }
 
-bintray {
-    user = System.getProperty('bintray.user')
-    key = System.getProperty('bintray.key')
-    publications = ['mavenPublication']
-
-    pkg {
-        repo = 'PrettyBoxFormatter'
-        name = 'PrettyBoxFormatter'
-        userOrg = 'knezmilos13'
-        licenses = ['Apache-2.0']
-        vcsUrl = 'https://github.com/knezmilos13/prettyboxformatter'
-        version {
-            name = '1.4.0'
-            desc = '1.4.0'
-            released  = new Date()
-        }
-    }
-
-    publish = true
+signing {
+    sign configurations.archives
 }
-
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
-    compile group: 'org.jetbrains', name: 'annotations', version: '13.0'
+    testImplementation group: 'junit', name: 'junit', version: '4.12'
+    implementation group: 'org.jetbrains', name: 'annotations', version: '13.0'
 }
