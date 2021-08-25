@@ -9,6 +9,7 @@ plugins {
     id "maven-publish"
     id "java"
     id "signing"
+    id "io.github.gradle-nexus.publish-plugin"
 }
 
 group 'com.nickhudkins'
@@ -71,8 +72,8 @@ publishing {
             def snapshotRepo = "https://oss.sonatype.org/content/repositories/snapshots/"
             url = isReleaseVersion ? releaseRepo : snapshotRepo
             credentials {
-                username = System.getenv("MAVEN_USERNAME")
-                password = System.getenv("MAVEN_PASSWORD")
+                username = System.getenv("ORG_GRADLE_PROJECT_sonatypeUsername")
+                password = System.getenv("ORG_GRADLE_PROJECT_sonatypePassword")
             }
         }
     }
@@ -101,12 +102,18 @@ publishing {
     }
 }
 
-signing {
-    def signingKeyId = findProperty("signingKeyId")
-    def signingKey = findProperty("signingKey")
-    def signingPassword = findProperty("signingPassword")
-    useInMemoryPgpKeys(signingKey, signingPassword)
-    sign publishing.publications
+// signing {
+//     def signingKeyId = findProperty("signingKeyId")
+//     def signingKey = findProperty("signingKey")
+//     def signingPassword = findProperty("signingPassword")
+//     useInMemoryPgpKeys(signingKey, signingPassword)
+//     sign publishing.publications
+// }
+
+nexusPublishing {
+    repositories {
+        sonatype()
+    }
 }
 
 dependencies {
